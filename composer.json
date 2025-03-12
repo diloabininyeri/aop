@@ -1,0 +1,22 @@
+{
+  "name": "zeus/aop",
+  "description": "aop library for php",
+  "minimum-stability": "stable",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Abdulkadir(DILO) surucu",
+      "email": "berxudar@gmail.com"
+    }
+  ],
+  "autoload": {
+    "psr-4": {
+      "Zeus\\Aop\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Zeus\\Aop\\Tests\\": "tests/"
+    }
+  }
+}

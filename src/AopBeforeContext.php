@@ -109,6 +109,11 @@ class AopBeforeContext
         $this->arguments = $arguments;
     }
 
+    /**
+     * @param Throwable $exception
+     * @return void
+     * @throws Throwable
+     */
     public function throw(Throwable $exception):void
     {
         throw $exception;

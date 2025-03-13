@@ -3,8 +3,6 @@
 namespace Zeus\Aop;
 
 
-use ParseError;
-
 class AopProxyGenerator
 {
 
@@ -25,6 +23,9 @@ class AopProxyGenerator
 
         $proxyCode = "
         namespace $namespace;
+        
+        use \Zeus\Aop\AopProxyExecutor;
+        
         class $class {
             private \$service;
             private static \$isProxy = false;
@@ -39,21 +40,28 @@ class AopProxyGenerator
             }
 
             public function __call(\$methodName, \$arguments) {
-              if(\$this->service === null) {return;}
-                \$beforeContext=new \Zeus\Aop\AopBeforeContext(\"$className\", \$methodName, \$arguments);
-                \Zeus\Aop\AopHooks::triggerBefore(\$beforeContext);
-                if (!\$beforeContext->shouldProceed()) {
-                    return \$beforeContext->getReturnValue();
-                }
-                \$result = call_user_func_array([\$this->service, \$methodName],\$beforeContext->getArguments());
-                \$afterContext= new \Zeus\Aop\AopAfterContext(\$result);
-                \$afterContext->setBeforeContext(\$beforeContext);
-                \$afterContext->setArguments(\$arguments);
-                \Zeus\Aop\AopHooks::triggerAfter(\"$className\", \$methodName,\$afterContext);
-                return \$afterContext->getReturnValue();
+               return AopProxyExecutor::call(\$this->service,\"$className\", \$methodName, \$arguments);
             }
+            
+            public function __get(\$name) {
+                return \$this->service->\$name;
+            }
+            
+            public function __set(\$name, \$value) {
+                \$this->service->\$name = \$value;
+            }
+            
+            public function __isset(\$name) {
+                return isset(\$this->service->\$name);
+            }
+            
+            public function __unset(\$name) {
+                unset(\$this->service->\$name);
+            }
+           
         }
         ";
+
         eval($proxyCode);
     }
 }

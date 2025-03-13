@@ -2,18 +2,14 @@
 
 namespace Zeus\Aop\Tests\Stubs;
 
-class Order
+readonly class Order
 {
-
-    private int $id=5;
-
-
-    public function __construct(private Book $book)
+    public function __construct(private int $id)
     {
     }
 
-    public function getId()
+    public function getId(): int
     {
-        return $this->book->getName() . 'Order.php' . $this->id;
+        return $this->id;
     }
 }

@@ -7,6 +7,8 @@ use ParseError;
 
 class AopProxyGenerator
 {
+
+
     public function generate($className, $file): void
     {
         $code = file_get_contents($file);
@@ -17,13 +19,7 @@ class AopProxyGenerator
         $code = str_replace(['<?php', '?>'], '', $realCode);
         $code = trim($code);
 
-        try {
-
-            eval($code);//P
-        }catch (ParseError $e) {
-            throw $e;//itl make a custom exception
-        }
-
+        eval($code);//P
         $namespace = implode('\\', array_slice($array, 0, -1));
         $originalClass = "\\$namespace\\$randomName";
 
@@ -39,22 +35,20 @@ class AopProxyGenerator
                     return;
                 }
                 self::\$isProxy = true;
-                \$this->service = new $originalClass(...\$args); 
-                \$this->interceptor = new \\Zeus\\Aop\\AopInterceptor();
-
+                \$this->service = new $originalClass(...\$args);
                 self::\$isProxy = false;
             }
 
             public function __call(\$methodName, \$arguments) {
               if(\$this->service === null) {return;}
-                \$this->interceptor->before(\"$class\", \$methodName, \$arguments);
-                \$result = call_user_func_array([\$this->service, \$methodName], \$arguments);
-                \$this->interceptor->after(\"$class\", \$methodName, \$result);
-                return \$result;
+                \Zeus\Aop\AopHooks::triggerBefore(\"$className\", \$methodName,\$arguments,);
+                \$result = call_user_func_array([\$this->service, \$methodName],\$arguments);
+                \$aopReturn = new \Zeus\Aop\AopReturn(\$result);
+                \Zeus\Aop\AopHooks::triggerAfter(\"$className\", \$methodName,\$aopReturn);
+                return \$aopReturn->getValue();
             }
         }
         ";
-
         eval($proxyCode);
     }
 }

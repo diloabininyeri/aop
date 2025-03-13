@@ -44,28 +44,28 @@ class AopHooks
         ];
     }
 
-    /**
-     * @param string $class
-     * @param string $method
-     * @param array $arguments
+    /***
+     * @noinspection PhpUnused
+     * @param AopBeforeContext $aopBeforeContext
      * @return void
      */
-    public static function triggerBefore(string $class, string $method,array $arguments=[]): void
+    public static function triggerBefore(AopBeforeContext $aopBeforeContext): void
     {
         foreach (static::$calls['before'] ?? [] as $call) {
-            if ($call['class'] === $class && $call['method'] === $method) {
-                $call['closure'](...$arguments);
+            if ($call['class'] === $aopBeforeContext->getClassName() && $call['method'] === $aopBeforeContext->getMethodName()) {
+                $call['closure']($aopBeforeContext);
             }
         }
     }
 
     /**
+     * @noinspection PhpUnused
      * @param string $class
      * @param string $method
-     * @param AopReturn $aopReturn
+     * @param AopAfterContext $aopReturn
      * @return void
      */
-    public static function triggerAfter(string $class, string $method, AopReturn $aopReturn): void
+    public static function triggerAfter(string $class, string $method, AopAfterContext $aopReturn): void
     {
         foreach (static::$calls['after'] ?? [] as $call) {
             if ($call['class'] === $class && $call['method'] === $method) {

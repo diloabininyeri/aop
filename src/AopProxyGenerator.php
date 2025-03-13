@@ -27,7 +27,6 @@ class AopProxyGenerator
         namespace $namespace;
         class $class {
             private \$service;
-            private \$interceptor;
             private static \$isProxy = false;
 
             public function __construct(...\$args) {
@@ -41,11 +40,17 @@ class AopProxyGenerator
 
             public function __call(\$methodName, \$arguments) {
               if(\$this->service === null) {return;}
-                \Zeus\Aop\AopHooks::triggerBefore(\"$className\", \$methodName,\$arguments,);
-                \$result = call_user_func_array([\$this->service, \$methodName],\$arguments);
-                \$aopReturn = new \Zeus\Aop\AopReturn(\$result);
-                \Zeus\Aop\AopHooks::triggerAfter(\"$className\", \$methodName,\$aopReturn);
-                return \$aopReturn->getValue();
+                \$beforeContext=new \Zeus\Aop\AopBeforeContext(\"$className\", \$methodName, \$arguments);
+                \Zeus\Aop\AopHooks::triggerBefore(\$beforeContext);
+                if (!\$beforeContext->shouldProceed()) {
+                    return \$beforeContext->getReturnValue();
+                }
+                \$result = call_user_func_array([\$this->service, \$methodName],\$beforeContext->getArguments());
+                \$afterContext= new \Zeus\Aop\AopAfterContext(\$result);
+                \$afterContext->setBeforeContext(\$beforeContext);
+                \$afterContext->setArguments(\$arguments);
+                \Zeus\Aop\AopHooks::triggerAfter(\"$className\", \$methodName,\$afterContext);
+                return \$afterContext->getReturnValue();
             }
         }
         ";

@@ -1,10 +1,12 @@
 ### Aop autoloader
 
 ```php
+<?php
 
+use Zeus\Aop\AopAfterContext;
 use Zeus\Aop\AopAutoloader;
-use Zeus\Aop\AopReturn;
-use Zeus\Aop\Tests\Stubs\Order;
+use Zeus\Aop\AopBeforeContext;
+use Zeus\Aop\Tests\Stubs\Http;
 
 require_once 'vendor/autoload.php';
 
@@ -13,26 +15,35 @@ $aopAutoloader = new AopAutoloader();
 $aopAutoloader->register();
 
 
-$aopAutoloader->hook(Order::class, 'getId', static function (AopReturn $aopReturn) {
-    // $aopReturn->getValue(); ->5
-    $aopReturn->setValue(100);
+$aopAutoloader->before(Http::class, 'get', static function (AopBeforeContext $beforeContext) {
+
+    /*$beforeContext->getArguments();
+    $beforeContext->getClassName();
+    $beforeContext->getMethodName();*/
+    //$beforeContext->stop('return value');
+    //$beforeContext->throw(new RuntimeException('the method is denied'));
+
 });
 
-/**
-readonly class Order
-{
-public function __construct(private int $id)
-{
-}
+$aopAutoloader->hook(Http::class, 'get', static function (AopAfterContext $afterContext) {
 
-public function getId(): int
+    //$afterContext->getReturnValue();//bar.com
+    $afterContext->forceReturnValue('example');
+});
+
+/*
+ * a basic http class
+ Http
 {
-return $this->id;
-}
+
+
+    public function get(string $url): string
+    {
+        return $url;
+    }
 }*/
-//the getId return the 5 but set it to 100
-echo new Order(5)->getId(); //100
-
+$http = new Http();
+echo $http->get('bar.com'); //example
 ```
 **<p style="color: green;">continues to be developed!!!</p>**
 

@@ -3,30 +3,49 @@
 namespace Zeus\Aop;
 
 
+/**
+ *
+ */
 class AopProxyGenerator
 {
 
 
+    /**
+     * @param $className
+     * @param $file
+     * @return void
+     */
     public function generate($className, $file): void
     {
-        $code = file_get_contents($file);
-        $array = explode('\\', $className);
-        $class = end($array);
-        $randomName = 'AopProxy_' . $class;
-        $realCode = str_replace("class $class", "class $randomName", $code);
-        $code = str_replace(['<?php', '?>'], '', $realCode);
-        $code = trim($code);
+        $originalCode = file_get_contents($file);
+        $partNamespace = explode('\\', $className);
+        $originalClassName = end($partNamespace);
+        $proxyClassName = 'AopProxy_' . $originalClassName;
+        $realCode = str_replace("class $originalClassName", "class $proxyClassName", $originalCode);
+        $modifiedOriginalCode = str_replace(['<?php', '?>'], '', $realCode);
+        $modifiedOriginalCode = trim($modifiedOriginalCode);
 
-        eval($code);//P
-        $namespace = implode('\\', array_slice($array, 0, -1));
-        $originalClass = "\\$namespace\\$randomName";
+        eval($modifiedOriginalCode);
+        $namespace = implode('\\', array_slice($partNamespace, 0, -1));
+        $originalClass = "\\$namespace\\$proxyClassName";
+        eval($this->generateProxyCode($namespace, $originalClassName, $originalClass, $className));
+    }
 
-        $proxyCode = "
+    /**
+     * @param string $namespace
+     * @param false|string $originalClassName
+     * @param string $originalClass
+     * @param $className
+     * @return string
+     */
+    public function generateProxyCode(string $namespace, false|string $originalClassName, string $originalClass, $className): string
+    {
+        return "
         namespace $namespace;
         
         use \Zeus\Aop\AopProxyExecutor;
         
-        class $class {
+        class $originalClassName {
             private \$service;
             private static \$isProxy = false;
 
@@ -58,10 +77,12 @@ class AopProxyGenerator
             public function __unset(\$name) {
                 unset(\$this->service->\$name);
             }
+            
+            public static function __callStatic(\$methodName, \$arguments) {
+                return AopProxyExecutor::callStatic(\"$originalClass\",\"$className\",\$methodName, \$arguments);
+            }
            
         }
         ";
-
-        eval($proxyCode);
     }
 }

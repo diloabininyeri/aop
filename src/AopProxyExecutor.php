@@ -32,4 +32,28 @@ class AopProxyExecutor
         AopHooks::triggerAfter($class, $method, $afterContext);
         return $afterContext->getReturnValue();
     }
+
+
+    /***
+     * @param string $originalClass
+     * @param string $class
+     * @param string $method
+     * @param array $arguments
+     * @return mixed
+     */
+
+    public static function callStatic(string $originalClass,string $class,string $method,array $arguments): mixed
+    {
+        $beforeContext = new AopBeforeContext($class, $method, $arguments);
+        AopHooks::triggerBefore($beforeContext);
+        if (!$beforeContext->shouldProceed()) {
+            return $beforeContext->getReturnValue();
+        }
+        $result = $originalClass::$method(...$beforeContext->getArguments());
+        $afterContext = new AopAfterContext($result);
+        $afterContext->setBeforeContext($beforeContext);
+        $afterContext->setArguments($arguments);
+        AopHooks::triggerAfter($class, $method, $afterContext);
+        return $afterContext->getReturnValue();
+    }
 }

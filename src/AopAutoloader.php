@@ -40,7 +40,9 @@ class AopAutoloader
      */
     public function register(): void
     {
-        spl_autoload_register([$this, 'loadClass'], true, true);
+        if (!in_array([$this, 'loadClass'], spl_autoload_functions(), true)) {
+            spl_autoload_register([$this, 'loadClass'], true, true);
+        }
     }
 
     /**
